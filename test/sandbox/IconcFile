@@ -1,0 +1,9 @@
+module.exports = {
+    file: '../file/_icon_.png',
+    dest: '.',
+    schema: {
+        'icon-40': { w: 40 },
+        'icon': { p: 100 },
+        'icon-29': { w: 29 }
+    }
+};

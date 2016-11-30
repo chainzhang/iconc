@@ -1,0 +1,79 @@
+#!/usr/bin/env node
+
+const path = require('path');
+const argv = require('yargs').argv;
+const Iconc = require('../');
+const async = require('async');
+const fs = require('fs');
+const colors = require('colors');
+const Yaml = require('js-yaml');
+const assert = require('assert');
+
+const SPACE = 8;
+const ICONC_FILE = path.join(process.cwd(), 'IconcFile');
+const NODE_ENV = process.env.NODE_ENV;
+
+if (NODE_ENV == 'testing') {
+    console.log = function() {};
+}
+
+async.waterfall([
+    (done) => {
+        fs.exists(ICONC_FILE, exists => {
+            if (exists) {
+                return async.waterfall([
+                    (done) => fs.readFile(ICONC_FILE, done),
+                    (buffer, done) => {
+                        const str = buffer.toString();
+                        try {
+                            return done(null, Yaml.safeLoad(str));
+                        } catch (e) {
+                            console.log(e);
+                            try {
+                                return done(null, JSON.parse(str));
+                            } catch (e) {
+                                console.log(e);
+                                return done(null, require(ICONC_FILE));
+                            }
+                        }
+                    }
+                ], done);       
+            }
+            return done(null, null);
+        })
+    },
+    (opt, done) => {
+        var targets = opt;
+        if (!targets) {
+            opt = opt || {};
+            opt.file = argv.f || argv.file || opt.file;
+            opt.dest = argv.d || argv.dest || opt.dest;
+            opt.schema = argv.s || argv.schema || opt.schema;
+            targets = {}
+            targets[opt.file] = {
+                dest: opt.dest,
+                schema: opt.schema
+            };
+        }
+        async.series(Object.keys(targets).map(src => done => {
+            const data = targets[src];
+            assert(data.dest && data.schema, 'invalid usage');
+            console.log(`${'-'.repeat(SPACE-2)}> Source:`.blue, path.join(process.cwd(), src));
+            console.log(`${'-'.repeat(SPACE-2)}> Target:`.green, path.join(process.cwd(), data.dest));
+            console.log('');
+            try {
+                const iconc = new Iconc({
+                    file: src,
+                    dest: data.dest,
+                    schema: data.schema
+                });
+                iconc.run(done);
+                iconc.on('data', (file) => console.log(`${' '.repeat(SPACE)}>>> `.green, file.white));
+            } catch (e) {
+                return done(e);
+            }
+        }), done);
+    }
+], err => {
+    if (err) return console.error(err.message.red);
+});
