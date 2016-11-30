@@ -6,6 +6,45 @@ const Iconc = require('../');
 const async = require('async');
 const fs = require('fs');
 const colors = require('colors');
+const assert = require('assert');
+
+const SPACE = 8;
+const NODE_ENV = process.env.NODE_ENV;
+
+if (NODE_ENV == 'testing') {
+    console.log = function() {};
+}
+
+async.waterfall([
+    (done) => {
+        var opt = opt || {};
+        opt.file = argv.f || argv.file || opt.file;
+        opt.dest = argv.d || argv.dest || opt.dest;
+        opt.schema = argv.s || argv.schema || opt.schema;
+        console.log(`${'-'.repeat(SPACE-2)}> Source:`.blue, path.join(process.cwd(), opt.file));
+        console.log(`${'-'.repeat(SPACE-2)}> Target:`.green, path.join(process.cwd(), opt.dest));
+        console.log('');
+        try {
+            const iconc = new Iconc(opt);
+            iconc.run(done);
+            iconc.on('data', (file) => console.log(`${' '.repeat(SPACE)}>>> `.green, file.white));
+        } catch (e) {
+            return done(e);
+        }
+    }
+], err => {
+    if (err) return console.error(err.message.red);
+});
+
+/*
+#!/usr/bin/env node
+
+const path = require('path');
+const argv = require('yargs').argv;
+const Iconc = require('../');
+const async = require('async');
+const fs = require('fs');
+const colors = require('colors');
 const Yaml = require('js-yaml');
 const assert = require('assert');
 
@@ -85,3 +124,4 @@ async.waterfall([
 ], err => {
     if (err) return console.error(err.message.red);
 });
+*/

@@ -37,6 +37,16 @@ Iconc.prototype.run = function(done) {
         (done) => fs.exists(self.file, exists => exists ? done() : done(new Error(`not found: ${self.file}`))),
         (done) => {
             if (typeof(self.schema) == 'string') {
+                if (/([^\:]+)\:(w|p)\d+\,?\s?/g.test(self.schema)){
+                    const found = self.schema.split(',').map(i => i.trim());
+                    self.schema = found.reduce((a, b) => {
+                        const f = b.match(/([^\:]+)\:(w|p)(\d+)/);
+                        a[f[1]] = {};
+                        a[f[1]][f[2]] = parseInt(f[3]);
+                        return a;
+                    }, {});
+                    return done();
+                }
                 return fs.exists(self.schema, exists => {
                     if (!exists) {
                         return done(new Error(`schema: ${self.schema} not found`));
