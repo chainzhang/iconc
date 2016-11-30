@@ -1,4 +1,7 @@
+node_modules
+
+test/file/gen/*
+test/sandbox/*
+
 !.gitignore
 !.gitkeep
-
-node_modules
