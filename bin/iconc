@@ -28,11 +28,9 @@ async.waterfall([
                         try {
                             return done(null, Yaml.safeLoad(str));
                         } catch (e) {
-                            console.log(e);
                             try {
                                 return done(null, JSON.parse(str));
                             } catch (e) {
-                                console.log(e);
                                 return done(null, require(ICONC_FILE));
                             }
                         }
@@ -54,6 +52,16 @@ async.waterfall([
                 dest: opt.dest,
                 schema: opt.schema
             };
+        } 
+        else 
+        {
+            if (opt.file && opt.schema && opt.dest) {
+                targets = {};
+                targets[opt.file] = {
+                    dest: opt.dest,
+                    schema: opt.schema
+                };
+            }
         }
         async.series(Object.keys(targets).map(src => done => {
             const data = targets[src];
